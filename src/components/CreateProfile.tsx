@@ -1,12 +1,13 @@
 
 import { useState } from "react";
-import { User, GraduationCap, BookOpen, Star, Upload } from "lucide-react";
+import { User, GraduationCap, BookOpen, Star, Upload, Calendar, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 const CreateProfile = () => {
@@ -15,40 +16,47 @@ const CreateProfile = () => {
     name: "",
     email: "",
     bio: "",
-    subjects: [],
-    experience: "",
-    hourlyRate: "",
-    availability: ""
+    classYear: "",
+    gpa: "",
+    availability: "",
+    preferredMeetingTimes: []
   });
   const [selectedSubjects, setSelectedSubjects] = useState([]);
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
 
   const roles = [
     {
-      id: "student",
-      title: "Student",
-      description: "Looking for help with my studies",
+      id: "mentee",
+      title: "Junior Student",
+      description: "Looking for guidance from senior students",
       icon: BookOpen,
       color: "from-blue-500 to-cyan-500"
     },
     {
-      id: "tutor",
-      title: "Tutor",
-      description: "Experienced in helping others learn",
+      id: "mentor",
+      title: "Senior Student",
+      description: "Help guide junior students in their academic journey",
       icon: GraduationCap,
       color: "from-purple-500 to-pink-500"
-    },
-    {
-      id: "mentor",
-      title: "Mentor",
-      description: "Guide students in their academic journey",
-      icon: Star,
-      color: "from-green-500 to-emerald-500"
     }
   ];
 
   const subjects = [
-    "Mathematics", "Physics", "Chemistry", "Biology", "English", "History",
-    "Computer Science", "Spanish", "French", "Psychology", "Economics", "Art"
+    "Mathematics", "Physics", "Chemistry", "Biology", "English Literature", "History",
+    "Computer Science", "Spanish", "French", "Psychology", "Economics", "Art",
+    "Music", "Physical Education", "Geography", "Philosophy"
+  ];
+
+  const classYears = ["9th Grade", "10th Grade", "11th Grade", "12th Grade"];
+  
+  const timeSlots = [
+    "Monday 7:00-8:00 AM", "Monday 12:00-1:00 PM", "Monday 3:00-4:00 PM", "Monday 7:00-8:00 PM",
+    "Tuesday 7:00-8:00 AM", "Tuesday 12:00-1:00 PM", "Tuesday 3:00-4:00 PM", "Tuesday 7:00-8:00 PM",
+    "Wednesday 7:00-8:00 AM", "Wednesday 12:00-1:00 PM", "Wednesday 3:00-4:00 PM", "Wednesday 7:00-8:00 PM",
+    "Thursday 7:00-8:00 AM", "Thursday 12:00-1:00 PM", "Thursday 3:00-4:00 PM", "Thursday 7:00-8:00 PM",
+    "Friday 7:00-8:00 AM", "Friday 12:00-1:00 PM", "Friday 3:00-4:00 PM", "Friday 7:00-8:00 PM",
+    "Saturday 9:00-10:00 AM", "Saturday 10:00-11:00 AM", "Saturday 2:00-3:00 PM", "Saturday 3:00-4:00 PM",
+    "Sunday 9:00-10:00 AM", "Sunday 10:00-11:00 AM", "Sunday 2:00-3:00 PM", "Sunday 3:00-4:00 PM"
   ];
 
   const handleSubjectToggle = (subject) => {
@@ -59,19 +67,36 @@ const CreateProfile = () => {
     );
   };
 
+  const handleTimeSlotToggle = (timeSlot) => {
+    setSelectedTimeSlots(prev => 
+      prev.includes(timeSlot)
+        ? prev.filter(t => t !== timeSlot)
+        : [...prev, timeSlot]
+    );
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedRole) {
-      toast.error("Please select a role");
+      toast.error("Please select your role");
       return;
     }
-    if (!formData.name || !formData.email) {
+    if (!formData.name || !formData.email || !formData.classYear) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+    if (selectedRole === "mentor" && selectedSubjects.length === 0) {
+      toast.error("Please select at least one subject you can mentor in");
       return;
     }
     
     toast.success("Profile created successfully!");
-    console.log("Profile data:", { ...formData, role: selectedRole, subjects: selectedSubjects });
+    console.log("Profile data:", { 
+      ...formData, 
+      role: selectedRole, 
+      subjects: selectedSubjects,
+      availableTimeSlots: selectedTimeSlots 
+    });
   };
 
   return (
@@ -79,10 +104,10 @@ const CreateProfile = () => {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-          Create Your Profile
+          Join Our School Mentoring Program
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Join our community and start your learning journey. Choose your role and let others know how they can connect with you.
+          Connect senior and junior students for free peer-to-peer mentoring and academic support.
         </p>
       </div>
 
@@ -92,7 +117,7 @@ const CreateProfile = () => {
           <CardTitle className="text-xl">Choose Your Role</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {roles.map((role) => (
               <div
                 key={role.id}
@@ -149,16 +174,48 @@ const CreateProfile = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address *
+                  School Email *
                 </label>
                 <Input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter your email"
+                  placeholder="Enter your school email"
                   className="border-gray-200 focus:border-blue-400"
                 />
               </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Class Year *
+                </label>
+                <Select onValueChange={(value) => setFormData(prev => ({ ...prev, classYear: value }))}>
+                  <SelectTrigger className="border-gray-200 focus:border-blue-400">
+                    <SelectValue placeholder="Select your grade level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classYears.map((year) => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedRole === "mentor" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    GPA (Optional)
+                  </label>
+                  <Input
+                    value={formData.gpa}
+                    onChange={(e) => setFormData(prev => ({ ...prev, gpa: e.target.value }))}
+                    placeholder="e.g., 3.8"
+                    className="border-gray-200 focus:border-blue-400"
+                  />
+                </div>
+              )}
             </div>
 
             <div>
@@ -168,7 +225,10 @@ const CreateProfile = () => {
               <Textarea
                 value={formData.bio}
                 onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                placeholder="Tell others about yourself, your interests, and what you're passionate about..."
+                placeholder={selectedRole === "mentor" 
+                  ? "Tell junior students about yourself, your academic interests, and how you'd like to help them..."
+                  : "Tell senior students about yourself, what you're passionate about, and what kind of guidance you're looking for..."
+                }
                 rows={4}
                 className="border-gray-200 focus:border-blue-400"
               />
@@ -180,7 +240,7 @@ const CreateProfile = () => {
         <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl">
-              {selectedRole === "student" ? "Subjects You Need Help With" : "Subjects You Can Teach"}
+              {selectedRole === "mentee" ? "Subjects You Need Help With" : "Subjects You Can Mentor In"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -203,53 +263,37 @@ const CreateProfile = () => {
           </CardContent>
         </Card>
 
-        {/* Additional Information for Tutors/Mentors */}
-        {(selectedRole === "tutor" || selectedRole === "mentor") && (
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl">Teaching Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Experience Level
-                  </label>
-                  <Input
-                    value={formData.experience}
-                    onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
-                    placeholder="e.g., 2 years, Beginner, Expert"
-                    className="border-gray-200 focus:border-blue-400"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hourly Rate
-                  </label>
-                  <Input
-                    value={formData.hourlyRate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: e.target.value }))}
-                    placeholder="e.g., $25/hour"
-                    className="border-gray-200 focus:border-blue-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Availability
-                </label>
-                <Input
-                  value={formData.availability}
-                  onChange={(e) => setFormData(prev => ({ ...prev, availability: e.target.value }))}
-                  placeholder="e.g., Weekdays 6-9 PM, Weekends"
-                  className="border-gray-200 focus:border-blue-400"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Availability Schedule */}
+        <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center space-x-2">
+              <Calendar className="w-5 h-5" />
+              <span>Availability Schedule</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Select the time slots when you're available for mentoring sessions
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {timeSlots.map((timeSlot) => (
+                <Badge
+                  key={timeSlot}
+                  variant={selectedTimeSlots.includes(timeSlot) ? "default" : "outline"}
+                  className={`cursor-pointer transition-all duration-200 justify-center py-2 ${
+                    selectedTimeSlots.includes(timeSlot)
+                      ? "bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                      : "hover:bg-gray-100"
+                  }`}
+                  onClick={() => handleTimeSlotToggle(timeSlot)}
+                >
+                  <Clock className="w-3 h-3 mr-1" />
+                  {timeSlot}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Submit Button */}
         <div className="text-center">
